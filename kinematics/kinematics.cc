@@ -1,7 +1,8 @@
-#include "Kinematics.h"
+#include "kinematics.h"
+#include "matrix_exp6.h"
+#include "vec_to_se3.h"
 #include <Eigen/Geometry> // Include this for advanced transformations if needed
 #include <cmath>
-
 // Implementation of DHKinematics constructor
 DHKinematics::DHKinematics(const std::vector<std::vector<double>> &dhParams)
     : dhParameters(dhParams) {}
@@ -29,19 +30,20 @@ DHKinematics::forwardKinematics(const std::vector<double> &jointAngles) {
 // Implementation of ScrewKinematics constructor
 ScrewKinematics::ScrewKinematics(
     const std::vector<Eigen::Matrix<double, 6, 1>> &axes,
-    const std::vector<double> &pitch)
-    : screwAxes(axes), h(pitch) {}
+    const Eigen::Matrix4d &M)
+    : screwAxes(axes), initialTransform(M) {}
 
 // Implementation of ScrewKinematics forwardKinematics
 Eigen::Matrix4d
 ScrewKinematics::forwardKinematics(const std::vector<double> &jointAngles) {
-  Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+  Eigen::Matrix4d T = initialTransform;
   for (size_t i = 0; i < screwAxes.size(); ++i) {
     double theta = jointAngles[i];
-    // This is a placeholder for the actual exponential map calculation
-    Eigen::Matrix4d matrixExp =
-        Eigen::Matrix4d::Identity(); // Placeholder: actually should calculate
-                                     // the exponential map of the screw axis
+    // Calculate the se(3) representation of the screw axis scaled by the joint
+    // angle
+    Eigen::Matrix<double, 6, 1> se3 = screwAxes[i] * theta;
+    // Compute the matrix exponential of the se(3) matrix
+    Eigen::Matrix4d matrixExp = math::MatrixExp6(math::VecTose3(se3));
     T = T * matrixExp;
   }
   return T;

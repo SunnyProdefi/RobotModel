@@ -25,11 +25,11 @@ class ScrewKinematics : public Kinematics {
 private:
   std::vector<Eigen::Matrix<double, 6, 1>>
       screwAxes; // Use Eigen::Matrix for a fixed-size 6D vector
-  std::vector<double> h;
+  Eigen::Matrix4d initialTransform;
 
 public:
   ScrewKinematics(const std::vector<Eigen::Matrix<double, 6, 1>> &axes,
-                  const std::vector<double> &pitch);
+                  const Eigen::Matrix4d &M);
   Eigen::Matrix4d
   forwardKinematics(const std::vector<double> &jointAngles) override;
 };
